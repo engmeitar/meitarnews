@@ -7,7 +7,7 @@ const parser = new Parser();
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const feed = await parser.parseURL(
-      "http://feeds.reuters.com/Reuters/worldNews"
+      "https://feeds.reuters.com/Reuters/worldNews"
     );
 
     const articles = feed.items.map((item) => ({
