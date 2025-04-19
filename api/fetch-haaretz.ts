@@ -1,31 +1,22 @@
 import { VercelRequest, VercelResponse } from "@vercel/node";
 import Parser from "rss-parser";
 
-const HAARETZ_RSS_URL = "https://www.haaretz.co.il/cmlink/1.524"; // Hebrew RSS
-
-type Article = {
-  title: string;
-  link: string;
-  pubDate?: string;
-  description?: string;
-};
+const parser = new Parser();
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  const parser = new Parser();
-
   try {
-    const feed = await parser.parseURL(HAARETZ_RSS_URL);
+    const feed = await parser.parseURL("https://www.haaretz.co.il/rss.xml");
 
-    const articles: Article[] = feed.items.map((item) => ({
-      title: item.title ?? "",
-      link: item.link ?? "",
+    const articles = feed.items.map((item) => ({
+      title: item.title,
+      link: item.link,
       pubDate: item.pubDate,
-      description: item.contentSnippet ?? "",
+      description: item.contentSnippet,
     }));
 
     res.status(200).json({ source: "haaretz", articles });
   } catch (error) {
-    console.error("Haaretz RSS Fetch Error:", error);
+    console.error("Haaretz Fetch Error:", error); // <-- Add this!
     res.status(500).json({ error: "Failed to fetch Haaretz articles" });
   }
 }
