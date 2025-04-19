@@ -1,13 +1,12 @@
-import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { VercelRequest, VercelResponse } from "@vercel/node";
 import fetch from "node-fetch";
 import * as cheerio from "cheerio";
 import { parseStringPromise } from "xml2js";
 
-const YNET_RSS_URL = "https://www.ynet.co.il/Integration/StoryRss2.xml";
-
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
-    const response = await fetch(YNET_RSS_URL);
+    const rssUrl = "https://www.ynet.co.il/Integration/StoryRss2.xml";
+    const response = await fetch(rssUrl);
     const xml = await response.text();
 
     const parsed = await parseStringPromise(xml);
