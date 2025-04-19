@@ -1,7 +1,7 @@
-import type { NextApiRequest, NextApiResponse } from "next";
+import { VercelRequest, VercelResponse } from "@vercel/node";
 import Parser from "rss-parser";
 
-const HAARETZ_RSS_URL = "https://www.haaretz.co.il/cmlink/1.524"; // Current Hebrew top news RSS
+const HAARETZ_RSS_URL = "https://www.haaretz.co.il/cmlink/1.524"; // Hebrew RSS
 
 type Article = {
   title: string;
@@ -10,10 +10,7 @@ type Article = {
   description?: string;
 };
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   const parser = new Parser();
 
   try {
