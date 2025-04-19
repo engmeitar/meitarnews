@@ -1,4 +1,4 @@
-// /functions/fetch-fox.ts
+// /api/fetch-fox.ts
 import { VercelRequest, VercelResponse } from "@vercel/node";
 import Parser from "rss-parser";
 
