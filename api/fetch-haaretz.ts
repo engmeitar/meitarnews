@@ -1,25 +1,34 @@
-import { VercelRequest, VercelResponse } from "@vercel/node";
+import type { NextApiRequest, NextApiResponse } from "next";
 import Parser from "rss-parser";
 
-const parser = new Parser();
+const HAARETZ_RSS_URL = "https://www.haaretz.co.il/cmlink/1.524"; // Current Hebrew top news RSS
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+type Article = {
+  title: string;
+  link: string;
+  pubDate?: string;
+  description?: string;
+};
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  const parser = new Parser();
+
   try {
-    const feed = await parser.parseURL(
-      "https://www.haaretz.co.il/cmlink/1.1477373"
-    );
+    const feed = await parser.parseURL(HAARETZ_RSS_URL);
 
-    const articles = feed.items.map((item) => ({
-      title: item.title,
-      link: item.link,
+    const articles: Article[] = feed.items.map((item) => ({
+      title: item.title ?? "",
+      link: item.link ?? "",
       pubDate: item.pubDate,
-      description: item.contentSnippet,
-      image: item.enclosure?.url || null,
+      description: item.contentSnippet ?? "",
     }));
 
     res.status(200).json({ source: "haaretz", articles });
-  } catch (error: any) {
-    console.error("🔴 Failed to fetch Haaretz articles:", error);
+  } catch (error) {
+    console.error("Haaretz RSS Fetch Error:", error);
     res.status(500).json({ error: "Failed to fetch Haaretz articles" });
   }
 }
