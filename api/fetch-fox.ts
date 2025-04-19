@@ -1,4 +1,4 @@
-// /api/fetch-bbc.ts
+// /api/fetch-fox.ts
 import { VercelRequest, VercelResponse } from "@vercel/node";
 import Parser from "rss-parser";
 
@@ -18,9 +18,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       image: item.enclosure?.url || null,
     }));
 
-    res.status(200).json({ source: "bbc", articles });
+    res.status(200).json({ source: "fox-news", articles });
   } catch (error: any) {
-    console.error("BBC RSS Fetch Error:", error?.message || error);
-    res.status(500).json({ error: "Failed to fetch BBC articles" });
+    console.error("Fox News RSS Fetch Error:", error.message || error);
+    res.status(500).json({ error: "Failed to fetch Fox News articles" });
   }
 }
