@@ -1,27 +1,27 @@
-// /api/fetch-reuters.ts
-import { VercelRequest, VercelResponse } from "@vercel/node";
+export const config = {
+  runtime: "edge",
+};
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: Request) {
   try {
-    const proxyUrl =
-      "https://api.rss2json.com/v1/api.json?rss_url=https://feeds.reuters.com/Reuters/worldNews";
+    const url = "https://feeds.reuters.com/Reuters/worldNews";
 
-    const response = await fetch(proxyUrl);
-    if (!response.ok) throw new Error(`Status ${response.status}`);
+    const rssRes = await fetch(url, {
+      headers: {
+        "User-Agent": "Mozilla/5.0", // trick to bypass bot filters
+      },
+    });
 
-    const data = await response.json();
+    const xml = await rssRes.text();
 
-    const articles = data.items.map((item: any) => ({
-      title: item.title,
-      link: item.link,
-      pubDate: item.pubDate,
-      description: item.description || item.content,
-      image: item.thumbnail || null,
-    }));
-
-    res.status(200).json({ source: "reuters", articles });
-  } catch (error: any) {
-    console.error("Reuters proxy fetch error:", error);
-    res.status(500).json({ error: "Failed to fetch Reuters articles" });
+    return new Response(JSON.stringify({ rawXml: xml }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (err: any) {
+    console.error("Edge fetch failed:", err);
+    return new Response(JSON.stringify({ error: "Reuters fetch failed" }), {
+      status: 500,
+    });
   }
 }
