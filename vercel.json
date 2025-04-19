@@ -1,14 +1,10 @@
 {
-    "functions": {
-      "api/**/*.ts": {
-        "runtime": "vercel/node"
-      },
-      "functions/**/*.ts": {
-        "runtime": "vercel/node"
-      }
-    },
-    "routes": [
-      { "src": "/api/(.*)", "dest": "/functions/$1.ts" }
-    ]
-  }
-  
+  "functions": {
+    "functions/**/*.ts": {
+      "runtime": "vercel/node"
+    }
+  },
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/functions/$1.ts" }
+  ]
+}
