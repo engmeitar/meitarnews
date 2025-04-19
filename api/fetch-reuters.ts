@@ -1,3 +1,4 @@
+// /api/fetch-reuters.ts
 import { VercelRequest, VercelResponse } from "@vercel/node";
 import Parser from "rss-parser";
 
@@ -6,7 +7,7 @@ const parser = new Parser();
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const feed = await parser.parseURL(
-      "http://feeds.reuters.com/reuters/topNews"
+      "http://feeds.reuters.com/Reuters/worldNews"
     );
 
     const articles = feed.items.map((item) => ({
@@ -18,8 +19,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }));
 
     res.status(200).json({ source: "reuters", articles });
-  } catch (error) {
-    console.error("Reuters RSS Fetch Error:", error);
+  } catch (error: any) {
+    console.error("Reuters RSS Fetch Error:", error?.message || error);
     res.status(500).json({ error: "Failed to fetch Reuters articles" });
   }
 }
