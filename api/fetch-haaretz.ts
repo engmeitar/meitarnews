@@ -1,29 +1,30 @@
-import { NextApiRequest, NextApiResponse } from "next";
-import Parser from "rss-parser";
+// /api/fetch-haaretz.ts
 
-const parser = new Parser({
-  customFields: {
-    item: ["description", "pubDate", "content", "link"],
-  },
-});
+import { NextRequest, NextResponse } from "next/server";
+import * as parser from "rss-parser";
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
+const rssParser = new parser();
+
+export async function GET(req: NextRequest) {
   try {
-    const feed = await parser.parseURL("https://www.haaretz.co.il/rss.xml");
+    const feed = await rssParser.parseURL(
+      "https://www.haaretz.co.il/cmlink/1.1477373"
+    );
 
-    const articles = feed.items.slice(0, 10).map((item) => ({
+    const articles = feed.items.map((item) => ({
       title: item.title,
       link: item.link,
       pubDate: item.pubDate,
       description: item.contentSnippet,
+      image: item.enclosure?.url || null,
     }));
 
-    res.status(200).json({ source: "haaretz", articles });
+    return NextResponse.json({ source: "haaretz", articles });
   } catch (error) {
-    console.error("Error fetching Haaretz RSS:", error);
-    res.status(500).json({ error: "Failed to fetch Haaretz articles" });
+    console.error("Failed to fetch Haaretz articles:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch Haaretz articles" },
+      { status: 500 }
+    );
   }
 }
