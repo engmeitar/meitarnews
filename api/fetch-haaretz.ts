@@ -1,24 +1,20 @@
 import { VercelRequest, VercelResponse } from "@vercel/node";
 import Parser from "rss-parser";
 
-const parser = new Parser();
+const parser = new Parser({
+  headers: {
+    "User-Agent": "Mozilla/5.0", // helps bypass some blocks
+  },
+});
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
-    const response = await fetch("https://www.haaretz.co.il/rss.xml", {
-      headers: {
-        "User-Agent": "Mozilla/5.0", // Helps bypass bot filters
-      },
-    });
+    console.log("Fetching Haaretz RSS...");
+    const feed = await parser.parseURL("https://www.haaretz.co.il/rss.xml");
 
-    if (!response.ok) {
-      throw new Error(`Failed to fetch: ${response.statusText}`);
-    }
+    console.log("Feed fetched:", feed?.items?.length);
 
-    const xml = await response.text();
-    const feed = await parser.parseString(xml);
-
-    const articles = feed.items.map((item: any) => ({
+    const articles = feed.items.map((item) => ({
       title: item.title,
       link: item.link,
       pubDate: item.pubDate,
