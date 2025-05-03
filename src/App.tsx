@@ -1,5 +1,6 @@
 // Trigger redeploy: minor update
 import React, { useState, useEffect } from "react";
+import { groupArticles, Article, GroupedArticle } from "./utils/groupArticles";
 
 export default function App() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -12,6 +13,7 @@ export default function App() {
   });
   const [error, setError] = useState("");
   const [recommended, setRecommended] = useState([]);
+  const [clusters, setClusters] = useState<GroupedArticle[]>([]);
 
   useEffect(() => {
     const fetchRecommended = async () => {
@@ -23,7 +25,6 @@ export default function App() {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
         const data = await response.json();
-
         const articles = data.articles.map((article) => ({
           title: article.title,
           image: article.urlToImage || "https://via.placeholder.com/400x200",
@@ -34,7 +35,6 @@ export default function App() {
             minute: "2-digit",
           }),
         }));
-
         setRecommended(articles);
       } catch (err) {
         console.error("Failed to fetch articles:", err);
@@ -45,6 +45,27 @@ export default function App() {
     };
 
     fetchRecommended();
+  }, []);
+
+  useEffect(() => {
+    const loadGroupedArticles = async () => {
+      try {
+        const sources = ["bbc", "guardian", "fox-news"];
+        const fetchFrom = async (src: string): Promise<Article[]> => {
+          const res = await fetch(`/api/fetch-${src}`);
+          const data = await res.json();
+          return data.articles.map((a: any) => ({ ...a, source: src }));
+        };
+        const all = await Promise.all(sources.map(fetchFrom));
+        const flat = all.flat();
+        const grouped = groupArticles(flat);
+        setClusters(grouped);
+      } catch (err) {
+        console.error("Failed to load grouped articles:", err);
+      }
+    };
+
+    loadGroupedArticles();
   }, []);
 
   const handleSearch = async () => {
@@ -116,10 +137,7 @@ export default function App() {
         {recommended.length > 0 && (
           <section>
             <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-              <span role="img" aria-label="newspaper">
-                🗞️
-              </span>{" "}
-              Recommended Articles
+              🗞️ Recommended Articles
             </h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {recommended.map((article, index) => (
@@ -151,6 +169,43 @@ export default function App() {
                     </p>
                   </div>
                 </a>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {clusters.length > 0 && (
+          <section>
+            <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+              🧠 Grouped Articles by Topic
+            </h2>
+            <div className="space-y-6">
+              {clusters.map((cluster, i) => (
+                <div key={i} className="bg-white rounded-lg shadow p-4 border">
+                  <h3 className="text-lg font-semibold mb-1">
+                    {cluster.title}
+                  </h3>
+                  <p className="text-sm italic text-gray-500 mb-2">
+                    Common keywords: {cluster.commonKeywords.join(", ")}
+                  </p>
+                  <ul className="list-disc ml-5">
+                    {cluster.articles.map((a, idx) => (
+                      <li key={idx}>
+                        <a
+                          href={a.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline"
+                        >
+                          {a.title}
+                        </a>{" "}
+                        <span className="text-xs text-gray-500">
+                          ({a.source})
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               ))}
             </div>
           </section>
