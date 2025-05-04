@@ -1,6 +1,15 @@
-// Updated App.tsx with fixed API endpoint names and fetch error handling
+// Fixed App.tsx with typings for Article and proper image error handling
 import React, { useState, useEffect } from "react";
-import groupArticles from "./utils/groupArticles";
+import { groupArticles } from "./utils/groupArticles";
+
+// Define Article type
+type Article = {
+  title: string;
+  image: string;
+  link: string;
+  source: string;
+  time: string;
+};
 
 export default function App() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -12,7 +21,7 @@ export default function App() {
     summary: "",
   });
   const [error, setError] = useState("");
-  const [recommended, setRecommended] = useState([]);
+  const [recommended, setRecommended] = useState<Article[]>([]);
 
   useEffect(() => {
     const fetchRecommended = async () => {
@@ -25,7 +34,7 @@ export default function App() {
         }
         const data = await response.json();
 
-        const articles = data.articles.map((article) => ({
+        const articles = data.articles.map((article: any) => ({
           title: article.title,
           image: article.urlToImage || "https://via.placeholder.com/400x200",
           link: article.url,
@@ -122,11 +131,11 @@ export default function App() {
             <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
               <span role="img" aria-label="newspaper">
                 🗞️
-              </span>
+              </span>{" "}
               Recommended Articles
             </h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {recommended.map((article, index) => (
+              {recommended.map((article: Article, index: number) => (
                 <a
                   key={index}
                   href={article.link}
@@ -140,9 +149,10 @@ export default function App() {
                     src={article.image}
                     alt={`Cover image for ${article.title}`}
                     loading="lazy"
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = "https://via.placeholder.com/400x200";
+                    onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+                      const target = e.target as HTMLImageElement;
+                      target.onerror = null;
+                      target.src = "https://via.placeholder.com/400x200";
                     }}
                     className="w-full h-48 object-cover"
                   />

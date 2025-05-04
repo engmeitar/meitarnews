@@ -1,83 +1,60 @@
-// src/utils/groupArticles.ts
-
-export interface Article {
+type Article = {
   title: string;
   link: string;
   pubDate: string;
   description: string;
-  image: string | null;
+  image?: string;
+};
+
+type SourceArticles = {
   source: string;
-}
-
-export interface GroupedArticle {
-  clusterId: number;
   articles: Article[];
-  title: string;
-  commonKeywords: string[];
-}
-
-// Very basic keyword extractor from the title & description
-function extractKeywords(text: string): string[] {
-  return text
-    .toLowerCase()
-    .replace(/[^a-z\s]/g, "")
-    .split(/\s+/)
-    .filter((word) => word.length > 4); // ignore short/common words
-}
-
-// Compute basic similarity score between two articles
-function similarityScore(a: Article, b: Article): number {
-  const aKeywords = new Set(extractKeywords(a.title + " " + a.description));
-  const bKeywords = new Set(extractKeywords(b.title + " " + b.description));
-
-  const intersection = [...aKeywords].filter((k) => bKeywords.has(k));
-  const union = new Set([...aKeywords, ...bKeywords]);
-
-  return intersection.length / union.size;
-}
+};
 
 export function groupArticles(
-  articles: Article[],
-  threshold = 0.2
-): GroupedArticle[] {
-  const clusters: GroupedArticle[] = [];
-  let clusterId = 0;
+  searchTerm: string,
+  allSources: SourceArticles[]
+): {
+  left: string;
+  center: string;
+  right: string;
+  summary: string;
+} {
+  const biasMap: Record<string, "left" | "center" | "right"> = {
+    guardian: "left",
+    bbc: "center",
+    fox: "right",
+  };
 
-  for (const article of articles) {
-    let placed = false;
+  const grouped: Record<"left" | "center" | "right", string> = {
+    left: "",
+    center: "",
+    right: "",
+  };
 
-    for (const cluster of clusters) {
-      const avgScore =
-        cluster.articles.reduce(
-          (sum, a) => sum + similarityScore(article, a),
-          0
-        ) / cluster.articles.length;
+  allSources.forEach(({ source, articles }) => {
+    const bias = biasMap[source.toLowerCase()];
+    if (!bias) return;
 
-      if (avgScore >= threshold) {
-        cluster.articles.push(article);
-        cluster.commonKeywords = Array.from(
-          new Set(
-            cluster.commonKeywords.concat(
-              extractKeywords(article.title + " " + article.description)
-            )
-          )
-        );
-        placed = true;
-        break;
-      }
+    const match = articles.find((a) =>
+      a.title.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    if (match) {
+      grouped[bias] = match.title;
     }
+  });
 
-    if (!placed) {
-      clusters.push({
-        clusterId: clusterId++,
-        articles: [article],
-        title: article.title,
-        commonKeywords: extractKeywords(
-          article.title + " " + article.description
-        ),
-      });
-    }
-  }
+  const summary = `Neutral summary about "${searchTerm}": combining ${
+    grouped.left || "left"
+  }, ${grouped.center || "center"}, and ${
+    grouped.right || "right"
+  } perspectives.`;
 
-  return clusters;
+  return {
+    left: grouped.left,
+    center: grouped.center,
+    right: grouped.right,
+    summary,
+  };
 }
