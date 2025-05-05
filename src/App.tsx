@@ -1,8 +1,6 @@
-// Fixed App.tsx with typings for Article and proper image error handling
 import React, { useState, useEffect } from "react";
 import { groupArticles } from "./utils/groupArticles";
 
-// Define Article type
 type Article = {
   title: string;
   image: string;
@@ -26,26 +24,12 @@ export default function App() {
   useEffect(() => {
     const fetchRecommended = async () => {
       try {
-        const response = await fetch(
-          "https://newsapi.org/v2/top-headlines?country=us&pageSize=6&apiKey=e596c01e008d4bfeafdd8e3922247f93"
-        );
+        const response = await fetch("/api/fetch-top-news");
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
         const data = await response.json();
-
-        const articles = data.articles.map((article: any) => ({
-          title: article.title,
-          image: article.urlToImage || "https://via.placeholder.com/400x200",
-          link: article.url,
-          source: article.source.name,
-          time: new Date(article.publishedAt).toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-        }));
-
-        setRecommended(articles);
+        setRecommended(data.articles);
       } catch (err) {
         console.error("Failed to fetch articles:", err);
         setError(
